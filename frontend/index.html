@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Tailor | ATS Optimizer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="gradient-bg">
+        <div class="gradient-1"></div>
+        <div class="gradient-2"></div>
+        <div class="gradient-3"></div>
+    </div>
+    
+    <!-- Particle Canvas -->
+    <canvas id="particleCanvas"></canvas>
+    
+    <!-- Navigation -->
+    <nav class="glass-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <path d="M16 2L2 9L16 16L30 9L16 2Z" stroke="url(#gradient)" stroke-width="2" fill="none"/>
+                    <path d="M2 16L16 23L30 16" stroke="url(#gradient)" stroke-width="2" fill="none"/>
+                    <path d="M2 23L16 30L30 23" stroke="url(#gradient)" stroke-width="2" fill="none"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00d4ff"/>
+                            <stop offset="100%" stop-color="#7c3aed"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>AI Resume Tailor</span>
+            </div>
+            <div class="nav-links">
+                <a href="#" class="nav-link" id="homeLink">Home</a>
+                <a href="#" class="nav-link" id="featuresLink">Features</a>
+                <a href="#" class="nav-link" id="pricingLink">Pricing</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="container">
+        <div class="hero-section">
+            <h1 class="glitch-text" data-text="AI-Powered Resume Optimization">AI-Powered Resume Optimization</h1>
+            <p class="subtitle">Tailor your resume to pass any ATS filter with 95%+ relevance score</p>
+        </div>
+        
+        <div class="upload-container">
+            <!-- Resume Upload -->
+            <div class="upload-card glass-card">
+                <div class="card-header">
+                    <div class="icon-wrapper">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M12 18V12M12 12L15 15M12 12L9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h2>Upload Resume</h2>
+                    <p>Supported format: .docx</p>
+                </div>
+                <div class="drop-zone" id="dropZone">
+                    <input type="file" id="resumeInput" accept=".docx" hidden>
+                    <div class="drop-zone-content">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                            <path d="M24 4V32M24 32L32 24M24 32L16 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M8 32V36C8 37.0609 8.42143 38.0783 9.17157 38.8284C9.92172 39.5786 10.9391 40 12 40H36C37.0609 40 38.0783 39.5786 38.8284 38.8284C39.5786 38.0783 40 37.0609 40 36V32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <p>Drag & drop your resume here</p>
+                        <span class="browse-btn">Browse files</span>
+                    </div>
+                </div>
+                <div id="fileName" class="file-name hidden"></div>
+            </div>
+            
+            <!-- Job Description -->
+            <div class="jd-card glass-card">
+                <div class="card-header">
+                    <div class="icon-wrapper">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M22 6L12 13L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h2>Job Description</h2>
+                    <p>Paste the job posting here</p>
+                </div>
+                <textarea id="jobDescription" placeholder="Paste job description here..."></textarea>
+            </div>
+        </div>
+        
+        <div class="action-section">
+            <button id="tailorBtn" class="tailor-btn" type="button">
+                <span class="btn-text">Tailor Resume</span>
+                <div class="btn-glow"></div>
+            </button>
+        </div>
+        
+        <!-- Loading Animation -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="loader">
+                <div class="loader-circle"></div>
+                <div class="loader-text">AI Analyzing & Optimizing...</div>
+                <div class="loader-subtext">This may take a few seconds</div>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div id="results" class="results-container hidden">
+            <div class="stats-grid">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value" id="atsScore">0</div>
+                    <div class="stat-label">ATS Score</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="scoreBar"></div>
+                    </div>
+                </div>
+                <div class="stat-card glass-card">
+                    <div class="stat-icon">🔑</div>
+                    <div class="stat-value" id="keywordsCount">0</div>
+                    <div class="stat-label">Keywords Matched</div>
+                </div>
+                <div class="stat-card glass-card">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-value" id="missingCount">0</div>
+                    <div class="stat-label">Missing Keywords</div>
+                </div>
+            </div>
+            
+            <div class="result-card glass-card">
+                <div class="result-header">
+                    <h3>Tailored Resume</h3>
+                    <button id="copyBtn" class="copy-btn" type="button">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M13.3333 6.66667H5.83333C5.09695 6.66667 4.5 7.26362 4.5 8V15.5C4.5 16.2364 5.09695 16.8333 5.83333 16.8333H13.3333C14.0697 16.8333 14.6667 16.2364 14.6667 15.5V8C14.6667 7.26362 14.0697 6.66667 13.3333 6.66667Z" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M5.5 6.5V4.5C5.5 3.76362 6.09695 3.16667 6.83333 3.16667H14.3333C15.0697 3.16667 15.6667 3.76362 15.6667 4.5V12C15.6667 12.7364 15.0697 13.3333 14.3333 13.3333H13.1667" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                        Copy
+                    </button>
+                </div>
+                <div class="resume-content" id="tailoredResume"></div>
+            </div>
+            
+            <div class="insights-card glass-card">
+                <h3>📊 Optimization Insights</h3>
+                <div id="changesSummary" class="insights-content"></div>
+                <div id="keywordsList" class="keywords-list"></div>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="downloadBtn" class="download-btn" type="button">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 2V13M10 13L13 10M10 13L7 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M3 13V16C3 16.5304 3.21071 17.0391 3.58579 17.4142C3.96086 17.7893 4.46957 18 5 18H15C15.5304 18 16.0391 17.7893 16.4142 17.4142C16.7893 17.0391 17 16.5304 17 16V13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    Download as DOCX
+                </button>
+                <button id="newResumeBtn" class="secondary-btn" type="button">Process Another Resume</button>
+            </div>
+        </div>
+    </main>
+    
+    <script src="script.js"></script>
+</body>
+</html>
