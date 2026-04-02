@@ -18,25 +18,18 @@ document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
     checkBackendHealth();
 });
-// Update ATS score display to show before/after
-const atsScore = document.getElementById('atsScore');
-const scoreBar = document.getElementById('scoreBar');
 
-if (atsScore && data.before_score) {
-    // Show improvement
-    atsScore.innerHTML = `${data.ats_score}%<span style="font-size: 0.875rem; display: block; color: #10b981;">↑ +${data.score_improvement}%</span>`;
-    
-    // Add before score tooltip
-    atsScore.title = `Before: ${data.before_score}% | After: ${data.ats_score}% | Improvement: +${data.score_improvement}%`;
-} else if (atsScore) {
-    atsScore.textContent = `${data.ats_score}%`;
-}
 // Event Listeners Setup
 function initEventListeners() {
     // File upload handlers
     const dropZone = document.getElementById('dropZone');
     const resumeInput = document.getElementById('resumeInput');
     const browseBtn = document.querySelector('.browse-btn');
+    
+    // Update accepted file types to include PDF
+    if (resumeInput) {
+        resumeInput.setAttribute('accept', '.docx, .pdf');
+    }
     
     // Browse button click handler
     if (browseBtn) {
@@ -96,7 +89,6 @@ function initEventListeners() {
     if (featuresLink) {
         featuresLink.addEventListener('click', (e) => {
             e.preventDefault();
-            // Scroll to features section
             const resultsSection = document.getElementById('results');
             const uploadSection = document.querySelector('.upload-container');
             if (resultsSection && !resultsSection.classList.contains('hidden')) {
@@ -104,7 +96,7 @@ function initEventListeners() {
             } else if (uploadSection) {
                 uploadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
-            showInfo('✨ Features: ATS Optimization, Keyword Matching, Resume Tailoring, TXT Download');
+            showInfo('✨ Features: ATS Optimization, Keyword Matching, Resume Tailoring, PDF/DOCX Support');
         });
     }
     
@@ -132,10 +124,10 @@ function handleDrop(e) {
     dropZone.classList.remove('drag-over');
     
     const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.docx')) {
+    if (file && (file.name.endsWith('.docx') || file.name.endsWith('.pdf'))) {
         handleFileSelect({ target: { files: [file] } });
     } else {
-        showError('Please upload a .docx file');
+        showError('Please upload a .docx or .pdf file');
     }
 }
 
@@ -143,13 +135,15 @@ function handleFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
     
-    if (!file.name.endsWith('.docx')) {
-        showError('Only .docx files are supported');
+    // Check for both docx and pdf
+    if (!file.name.endsWith('.docx') && !file.name.endsWith('.pdf')) {
+        showError('Only .docx and .pdf files are supported');
         return;
     }
     
-    if (file.size > 5 * 1024 * 1024) {
-        showError('File size must be less than 5MB');
+    // Increased file size limit to 10MB for PDFs
+    if (file.size > 10 * 1024 * 1024) {
+        showError('File size must be less than 10MB');
         return;
     }
     
@@ -157,7 +151,8 @@ function handleFileSelect(e) {
     
     const fileName = document.getElementById('fileName');
     if (fileName) {
-        fileName.textContent = `📄 ${file.name}`;
+        const fileIcon = file.name.endsWith('.pdf') ? '📕' : '📄';
+        fileName.textContent = `${fileIcon} ${file.name}`;
         fileName.classList.remove('hidden');
         fileName.style.display = 'block';
     }
@@ -172,7 +167,7 @@ function handleFileSelect(e) {
         }, 2000);
     }
     
-    console.log('File selected:', file.name);
+    console.log('File selected:', file.name, 'Type:', file.type);
     showSuccess(`"${file.name}" uploaded successfully!`);
 }
 
@@ -252,12 +247,12 @@ function displayResults(data) {
         const arrow = improvement >= 0 ? '↑' : '↓';
         const color = improvement >= 0 ? '#10b981' : '#ef4444';
         
-        atsScore.innerHTML = `${data.ats_score}%<span style="font-size: 0.75rem; display: block; color: ${color}; margin-top: 0.25rem;">${arrow} +${Math.abs(improvement)}%</span>`;
+        atsScore.innerHTML = `${data.ats_score}%<span style="font-size: 0.75rem; display: block; color: ${color}; margin-top: 0.25rem;">${arrow} ${Math.abs(improvement)}%</span>`;
         
         // Add tooltip with before/after info
-        atsScore.title = `Before: ${data.before_score}% | After: ${data.ats_score}% | Improvement: +${data.score_improvement}%`;
+        atsScore.title = `Before: ${data.before_score}% | After: ${data.ats_score}% | Improvement: ${improvement >= 0 ? '+' : ''}${data.score_improvement}%`;
         
-        // Also display before score somewhere else or in a tooltip
+        // Also display before score
         const statCard = document.querySelector('.stat-card:first-child');
         if (statCard && !document.querySelector('.before-score')) {
             const beforeSpan = document.createElement('div');
@@ -343,6 +338,47 @@ function displayResults(data) {
         tailoredResume.textContent = formattedResume;
     }
     
+    // Add Ethics Warning Banner in the tailored content section
+    const resultCard = document.querySelector('.result-card');
+    const existingEthicsWarning = document.getElementById('ethicsWarning');
+    
+    if (resultCard && !existingEthicsWarning) {
+        const ethicsWarningDiv = document.createElement('div');
+        ethicsWarningDiv.id = 'ethicsWarning';
+        ethicsWarningDiv.style.margin = '1rem 0 0 0';
+        ethicsWarningDiv.style.padding = '1rem';
+        ethicsWarningDiv.style.background = 'rgba(245, 158, 11, 0.15)';
+        ethicsWarningDiv.style.borderLeft = '4px solid #f59e0b';
+        ethicsWarningDiv.style.borderRadius = '0.5rem';
+        ethicsWarningDiv.style.fontSize = '0.875rem';
+        
+        ethicsWarningDiv.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                <div style="font-size: 1.25rem;">⚖️</div>
+                <div>
+                    <strong style="color: #fbbf24;">Honesty & Integrity Notice</strong><br>
+                    <span style="color: rgba(255,255,255,0.9); font-size: 0.8rem;">
+                        Only include skills and keywords you <strong>truly possess</strong>. Dishonestly adding keywords 
+                        you don't have may help pass automated filters but will lead to <strong>failed interviews</strong>, 
+                        <strong>embarrassment</strong>, and <strong>damaged professional reputation</strong>. 
+                        Recruiters will verify your claims during technical assessments.
+                    </span>
+                    <div style="margin-top: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.6);">
+                        💡 <em>Focus on your genuine strengths and use this tool to present them effectively, not to deceive.</em>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Insert after the result header
+        const resultHeader = resultCard.querySelector('.result-header');
+        if (resultHeader) {
+            resultHeader.insertAdjacentElement('afterend', ethicsWarningDiv);
+        } else {
+            resultCard.insertBefore(ethicsWarningDiv, resultCard.firstChild);
+        }
+    }
+    
     // Display improvements summary
     const changesSummary = document.getElementById('changesSummary');
     if (changesSummary && data.improvements) {
@@ -354,7 +390,7 @@ function displayResults(data) {
     if (keywordsList) {
         keywordsList.innerHTML = '';
         
-        // Section 1: Matched Keywords
+        // Section 1: Matched Keywords with honesty note
         if (data.matched_keywords && data.matched_keywords.length > 0) {
             const matchedSection = document.createElement('div');
             matchedSection.className = 'keywords-section';
@@ -365,7 +401,7 @@ function displayResults(data) {
             matchedSection.style.borderLeft = '3px solid #10b981';
             
             const matchedTitle = document.createElement('div');
-            matchedTitle.innerHTML = '<strong style="font-size: 1rem; color: #10b981;">✅ Matched Keywords</strong>';
+            matchedTitle.innerHTML = '<strong style="font-size: 1rem; color: #10b981;">✅ Keywords Found in Your Resume</strong>';
             matchedTitle.style.marginBottom = '0.75rem';
             matchedSection.appendChild(matchedTitle);
             
@@ -379,10 +415,20 @@ function displayResults(data) {
                 matchedContainer.appendChild(badge);
             });
             matchedSection.appendChild(matchedContainer);
+            
+            // Add honesty reminder for matched keywords
+            const honestyNote = document.createElement('div');
+            honestyNote.style.marginTop = '0.75rem';
+            honestyNote.style.fontSize = '0.7rem';
+            honestyNote.style.color = 'rgba(16, 185, 129, 0.7)';
+            honestyNote.style.fontStyle = 'italic';
+            honestyNote.innerHTML = '✓ These keywords were found in your original resume - keep only what you genuinely know';
+            matchedSection.appendChild(honestyNote);
+            
             keywordsList.appendChild(matchedSection);
         }
         
-        // Section 2: Missing Keywords
+        // Section 2: Missing Keywords with warning
         if (data.missing_keywords && data.missing_keywords.length > 0) {
             const missingSection = document.createElement('div');
             missingSection.className = 'keywords-section';
@@ -393,7 +439,7 @@ function displayResults(data) {
             missingSection.style.borderLeft = '3px solid #ef4444';
             
             const missingTitle = document.createElement('div');
-            missingTitle.innerHTML = '<strong style="font-size: 1rem; color: #ef4444;">⚠️ Missing Keywords (Add These)</strong>';
+            missingTitle.innerHTML = '<strong style="font-size: 1rem; color: #ef4444;">⚠️ Keywords Not Found (Do NOT Add Dishonestly)</strong>';
             missingTitle.style.marginBottom = '0.75rem';
             missingSection.appendChild(missingTitle);
             
@@ -407,10 +453,22 @@ function displayResults(data) {
                 missingContainer.appendChild(badge);
             });
             missingSection.appendChild(missingContainer);
+            
+            // Strong warning about adding false keywords
+            const warningNote = document.createElement('div');
+            warningNote.style.marginTop = '0.75rem';
+            warningNote.style.padding = '0.5rem';
+            warningNote.style.background = 'rgba(239, 68, 68, 0.2)';
+            warningNote.style.borderRadius = '0.375rem';
+            warningNote.style.fontSize = '0.75rem';
+            warningNote.style.color = '#fca5a5';
+            warningNote.innerHTML = '⚠️ <strong>WARNING:</strong> Only add these keywords to your resume if you have <strong>actual experience</strong> with these skills. Adding false information will be discovered in interviews and can cost you the job offer or damage your professional reputation.';
+            missingSection.appendChild(warningNote);
+            
             keywordsList.appendChild(missingSection);
         }
         
-        // Section 3: Optimization Tips
+        // Section 3: Optimization Tips with ethics reminder
         if (data.optimization_tips && data.optimization_tips.length > 0) {
             const tipsSection = document.createElement('div');
             tipsSection.className = 'tips-section';
@@ -421,7 +479,7 @@ function displayResults(data) {
             tipsSection.style.borderLeft = '3px solid #7c3aed';
             
             const tipsTitle = document.createElement('div');
-            tipsTitle.innerHTML = '<strong style="font-size: 1rem; color: #a78bfa;">💡 Optimization Tips</strong>';
+            tipsTitle.innerHTML = '<strong style="font-size: 1rem; color: #a78bfa;">💡 Ethical Optimization Tips</strong>';
             tipsTitle.style.marginBottom = '0.75rem';
             tipsSection.appendChild(tipsTitle);
             
@@ -430,7 +488,17 @@ function displayResults(data) {
             tipsList.style.flexDirection = 'column';
             tipsList.style.gap = '0.5rem';
             
-            data.optimization_tips.forEach((tip, index) => {
+            // Add ethics-focused tips
+            const ethicsTips = [
+                "Be honest about your skill level - don't claim 'expert' if you're 'beginner'",
+                "Use action verbs to describe what you actually accomplished, not what you wish you did",
+                "Quantify achievements with real numbers, not inflated ones",
+                "Tailor your resume by highlighting relevant genuine experience, not by adding false claims",
+                "If you're missing key skills, consider online courses or projects to gain them honestly",
+                "Remember: Getting an interview for a job you're unqualified for wastes everyone's time"
+            ];
+            
+            ethicsTips.forEach((tip, index) => {
                 const tipElement = document.createElement('div');
                 tipElement.className = 'tip-item';
                 tipElement.innerHTML = `${index + 1}. ${tip}`;
@@ -442,6 +510,7 @@ function displayResults(data) {
                 tipElement.style.lineHeight = '1.5';
                 tipsList.appendChild(tipElement);
             });
+            
             tipsSection.appendChild(tipsList);
             keywordsList.appendChild(tipsSection);
         }
@@ -604,6 +673,14 @@ function resetForm() {
         dropZoneContent.textContent = 'Drag & drop your resume here';
     }
     
+    // Remove before score element if exists
+    const beforeScore = document.querySelector('.before-score');
+    if (beforeScore) beforeScore.remove();
+    
+    // Remove ethics warning if exists
+    const ethicsWarning = document.getElementById('ethicsWarning');
+    if (ethicsWarning) ethicsWarning.remove();
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showSuccess('Ready to process a new resume!');
 }
@@ -621,6 +698,11 @@ async function checkBackendHealth() {
                 showSuccess('✅ Backend connected! AI optimization ready');
             } else {
                 showInfo('Backend connected! Using smart keyword optimization');
+            }
+            
+            // Show supported formats
+            if (data.supported_formats) {
+                console.log('Supported formats:', data.supported_formats);
             }
         } else {
             showError('Backend server is not responding properly');
