@@ -108,6 +108,70 @@ function initEventListeners() {
     }
 }
 
+// Clear all results function
+function clearResults() {
+    console.log('Clearing previous results...');
+    
+    // Hide results container
+    const resultsDiv = document.getElementById('results');
+    if (resultsDiv) {
+        resultsDiv.classList.add('hidden');
+    }
+    
+    // Reset ATS score display
+    const atsScore = document.getElementById('atsScore');
+    if (atsScore) {
+        atsScore.textContent = '0';
+        atsScore.innerHTML = '0%';
+        atsScore.title = '';
+    }
+    
+    // Reset score bar
+    const scoreBar = document.getElementById('scoreBar');
+    if (scoreBar) {
+        scoreBar.style.width = '0%';
+    }
+    
+    // Reset keyword counts
+    const keywordsCount = document.getElementById('keywordsCount');
+    const missingCount = document.getElementById('missingCount');
+    if (keywordsCount) keywordsCount.textContent = '0';
+    if (missingCount) missingCount.textContent = '0';
+    
+    // Clear optimized resume content
+    const tailoredResume = document.getElementById('tailoredResume');
+    if (tailoredResume) {
+        tailoredResume.textContent = '';
+    }
+    
+    // Clear improvements summary
+    const changesSummary = document.getElementById('changesSummary');
+    if (changesSummary) {
+        changesSummary.innerHTML = '';
+    }
+    
+    // Clear keywords list
+    const keywordsList = document.getElementById('keywordsList');
+    if (keywordsList) {
+        keywordsList.innerHTML = '';
+    }
+    
+    // Remove before score element if exists
+    const beforeScore = document.querySelector('.before-score');
+    if (beforeScore) beforeScore.remove();
+    
+    // Remove ATS warning if exists
+    const atsWarning = document.getElementById('atsWarning');
+    if (atsWarning) atsWarning.remove();
+    
+    // Remove ethics warning if exists
+    const ethicsWarning = document.getElementById('ethicsWarning');
+    if (ethicsWarning) ethicsWarning.remove();
+    
+    // Reset download URL
+    currentDownloadUrl = null;
+}
+
 // File Handling
 function handleDragOver(e) {
     e.preventDefault();
@@ -134,6 +198,9 @@ function handleDrop(e) {
 function handleFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
+    
+    // Clear previous results when new file is selected
+    clearResults();
     
     // Check for both docx and pdf
     if (!file.name.endsWith('.docx') && !file.name.endsWith('.pdf')) {
@@ -169,6 +236,14 @@ function handleFileSelect(e) {
     
     console.log('File selected:', file.name, 'Type:', file.type);
     showSuccess(`"${file.name}" uploaded successfully!`);
+    
+    // Auto-scroll to job description section
+    const jobSection = document.querySelector('.jd-card');
+    if (jobSection) {
+        setTimeout(() => {
+            jobSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 500);
+    }
 }
 
 // Main Optimization Function
@@ -186,6 +261,9 @@ async function handleOptimize() {
         showError('Please paste a job description');
         return;
     }
+    
+    // Clear previous results before new optimization
+    clearResults();
     
     // Show loading overlay
     const loadingOverlay = document.getElementById('loadingOverlay');
@@ -273,15 +351,33 @@ function displayResults(data) {
         }, 100);
     }
     
-    // Display ATS Warning if present
+    // Update keyword counts with animation
+    const keywordsCount = document.getElementById('keywordsCount');
+    const missingCount = document.getElementById('missingCount');
+    
+    if (keywordsCount) {
+        animateNumber(keywordsCount, 0, data.matched_keywords?.length || 0, 1000);
+    }
+    if (missingCount) {
+        animateNumber(missingCount, 0, data.missing_keywords?.length || 0, 1000);
+    }
+    
+    // Display optimized resume
+    const tailoredResume = document.getElementById('tailoredResume');
+    if (tailoredResume && data.optimized_resume) {
+        let formattedResume = data.optimized_resume;
+        formattedResume = formattedResume.replace(/\n{3,}/g, '\n\n');
+        tailoredResume.textContent = formattedResume;
+    }
+    
+    // Display ATS Warning if present (after clearing previous)
     if (data.ats_warning) {
         const warning = data.ats_warning;
         const insightsCard = document.querySelector('.insights-card');
-        const existingWarning = document.getElementById('atsWarning');
         
-        if (existingWarning) {
-            existingWarning.remove();
-        }
+        // Remove existing warning first
+        const existingWarning = document.getElementById('atsWarning');
+        if (existingWarning) existingWarning.remove();
         
         const warningDiv = document.createElement('div');
         warningDiv.id = 'atsWarning';
@@ -319,30 +415,12 @@ function displayResults(data) {
         }
     }
     
-    // Update keyword counts
-    const keywordsCount = document.getElementById('keywordsCount');
-    const missingCount = document.getElementById('missingCount');
-    
-    if (keywordsCount) {
-        animateNumber(keywordsCount, 0, data.matched_keywords?.length || 0, 1000);
-    }
-    if (missingCount) {
-        animateNumber(missingCount, 0, data.missing_keywords?.length || 0, 1000);
-    }
-    
-    // Display optimized resume
-    const tailoredResume = document.getElementById('tailoredResume');
-    if (tailoredResume && data.optimized_resume) {
-        let formattedResume = data.optimized_resume;
-        formattedResume = formattedResume.replace(/\n{3,}/g, '\n\n');
-        tailoredResume.textContent = formattedResume;
-    }
-    
-    // Add Ethics Warning Banner in the tailored content section
+    // Add Ethics Warning Banner (remove old one first)
     const resultCard = document.querySelector('.result-card');
     const existingEthicsWarning = document.getElementById('ethicsWarning');
+    if (existingEthicsWarning) existingEthicsWarning.remove();
     
-    if (resultCard && !existingEthicsWarning) {
+    if (resultCard) {
         const ethicsWarningDiv = document.createElement('div');
         ethicsWarningDiv.id = 'ethicsWarning';
         ethicsWarningDiv.style.margin = '1rem 0 0 0';
@@ -469,51 +547,48 @@ function displayResults(data) {
         }
         
         // Section 3: Optimization Tips with ethics reminder
-        if (data.optimization_tips && data.optimization_tips.length > 0) {
-            const tipsSection = document.createElement('div');
-            tipsSection.className = 'tips-section';
-            tipsSection.style.marginBottom = '1rem';
-            tipsSection.style.padding = '1rem';
-            tipsSection.style.background = 'rgba(124, 58, 237, 0.1)';
-            tipsSection.style.borderRadius = '0.5rem';
-            tipsSection.style.borderLeft = '3px solid #7c3aed';
-            
-            const tipsTitle = document.createElement('div');
-            tipsTitle.innerHTML = '<strong style="font-size: 1rem; color: #a78bfa;">💡 Ethical Optimization Tips</strong>';
-            tipsTitle.style.marginBottom = '0.75rem';
-            tipsSection.appendChild(tipsTitle);
-            
-            const tipsList = document.createElement('div');
-            tipsList.style.display = 'flex';
-            tipsList.style.flexDirection = 'column';
-            tipsList.style.gap = '0.5rem';
-            
-            // Add ethics-focused tips
-            const ethicsTips = [
-                "Be honest about your skill level - don't claim 'expert' if you're 'beginner'",
-                "Use action verbs to describe what you actually accomplished, not what you wish you did",
-                "Quantify achievements with real numbers, not inflated ones",
-                "Tailor your resume by highlighting relevant genuine experience, not by adding false claims",
-                "If you're missing key skills, consider online courses or projects to gain them honestly",
-                "Remember: Getting an interview for a job you're unqualified for wastes everyone's time"
-            ];
-            
-            ethicsTips.forEach((tip, index) => {
-                const tipElement = document.createElement('div');
-                tipElement.className = 'tip-item';
-                tipElement.innerHTML = `${index + 1}. ${tip}`;
-                tipElement.style.padding = '0.5rem';
-                tipElement.style.background = 'rgba(255, 255, 255, 0.05)';
-                tipElement.style.borderRadius = '0.375rem';
-                tipElement.style.fontSize = '0.875rem';
-                tipElement.style.color = 'rgba(255, 255, 255, 0.9)';
-                tipElement.style.lineHeight = '1.5';
-                tipsList.appendChild(tipElement);
-            });
-            
-            tipsSection.appendChild(tipsList);
-            keywordsList.appendChild(tipsSection);
-        }
+        const ethicsTips = [
+            "Be honest about your skill level - don't claim 'expert' if you're 'beginner'",
+            "Use action verbs to describe what you actually accomplished, not what you wish you did",
+            "Quantify achievements with real numbers, not inflated ones",
+            "Tailor your resume by highlighting relevant genuine experience, not by adding false claims",
+            "If you're missing key skills, consider online courses or projects to gain them honestly",
+            "Remember: Getting an interview for a job you're unqualified for wastes everyone's time"
+        ];
+        
+        const tipsSection = document.createElement('div');
+        tipsSection.className = 'tips-section';
+        tipsSection.style.marginBottom = '1rem';
+        tipsSection.style.padding = '1rem';
+        tipsSection.style.background = 'rgba(124, 58, 237, 0.1)';
+        tipsSection.style.borderRadius = '0.5rem';
+        tipsSection.style.borderLeft = '3px solid #7c3aed';
+        
+        const tipsTitle = document.createElement('div');
+        tipsTitle.innerHTML = '<strong style="font-size: 1rem; color: #a78bfa;">💡 Ethical Optimization Tips</strong>';
+        tipsTitle.style.marginBottom = '0.75rem';
+        tipsSection.appendChild(tipsTitle);
+        
+        const tipsList = document.createElement('div');
+        tipsList.style.display = 'flex';
+        tipsList.style.flexDirection = 'column';
+        tipsList.style.gap = '0.5rem';
+        
+        ethicsTips.forEach((tip, index) => {
+            const tipElement = document.createElement('div');
+            tipElement.className = 'tip-item';
+            tipElement.innerHTML = `${index + 1}. ${tip}`;
+            tipElement.style.padding = '0.5rem';
+            tipElement.style.background = 'rgba(255, 255, 255, 0.05)';
+            tipElement.style.borderRadius = '0.375rem';
+            tipElement.style.fontSize = '0.875rem';
+            tipElement.style.color = 'rgba(255, 255, 255, 0.9)';
+            tipElement.style.lineHeight = '1.5';
+            tipsList.appendChild(tipElement);
+        });
+        
+        tipsSection.appendChild(tipsList);
+        keywordsList.appendChild(tipsSection);
     }
     
     // Scroll to results
@@ -657,8 +732,6 @@ function resetForm() {
     const fileName = document.getElementById('fileName');
     const jobDescription = document.getElementById('jobDescription');
     const resumeInput = document.getElementById('resumeInput');
-    const results = document.getElementById('results');
-    const scoreBar = document.getElementById('scoreBar');
     const dropZoneContent = document.querySelector('.drop-zone-content p');
     
     if (fileName) {
@@ -667,19 +740,12 @@ function resetForm() {
     }
     if (jobDescription) jobDescription.value = '';
     if (resumeInput) resumeInput.value = '';
-    if (results) results.classList.add('hidden');
-    if (scoreBar) scoreBar.style.width = '0%';
     if (dropZoneContent) {
         dropZoneContent.textContent = 'Drag & drop your resume here';
     }
     
-    // Remove before score element if exists
-    const beforeScore = document.querySelector('.before-score');
-    if (beforeScore) beforeScore.remove();
-    
-    // Remove ethics warning if exists
-    const ethicsWarning = document.getElementById('ethicsWarning');
-    if (ethicsWarning) ethicsWarning.remove();
+    // Clear all results
+    clearResults();
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showSuccess('Ready to process a new resume!');
