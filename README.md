@@ -122,18 +122,22 @@ venv\Scripts\activate      # Windows
 pip install -r requirements.txt
 ```
 
-### 4. Run the Application
+### 4. Add Env variable in .env inside backend directory
+
+```
+DEEPSEEK_API_KEY={your deepseek API key}
+```
+
+### 5. Run the Application
 
 ```bash
 python app.py
 ```
-
-### 5. Open in Browser (in Frontend)
+### 6. Double click on Index.html in backend to open in browser
 
 ```
-index.html
+Index.html
 ```
-
 ---
 
 ## 📊 How It Works
