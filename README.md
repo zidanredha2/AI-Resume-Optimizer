@@ -82,7 +82,7 @@ User Input (Resume + Job Description)
  (Tokenization, Cleaning, Parsing)
             │
             ▼
-   AI Analysis Engine
+   AI Analysis Engine (DeepSeek)
  - Keyword Extraction
  - Semantic Matching
  - Scoring Algorithm
@@ -108,7 +108,7 @@ git clone https://github.com/zidanredha2/AI-Resume-Optimizer.git
 cd AI-Resume-Optimizer
 ```
 
-### 2. Create Virtual Environment
+### 2. Create Virtual Environment (in Backend)
 
 ```bash
 python -m venv venv
@@ -128,10 +128,10 @@ pip install -r requirements.txt
 python app.py
 ```
 
-### 5. Open in Browser
+### 5. Open in Browser (in Frontend)
 
 ```
-http://127.0.0.1:5000/
+index.html
 ```
 
 ---
